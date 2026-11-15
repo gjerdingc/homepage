@@ -34,19 +34,42 @@
       </div>
     </header>
 
-    <div class="search-wrap">
-      <label class="visually-hidden" for="search">Søk etter en app</label>
-      <input id="search" type="search" placeholder="Hva leter du etter?" autocomplete="off" spellcheck="false">
-      <kbd class="hint" aria-hidden="true">/</kbd>
-    </div>
-
     <main id="apps" aria-live="polite"></main>
-    <p class="empty" id="empty" hidden>Fant ingenting som heter det. Prøv et annet ord?</p>
+    <p class="notice" id="notice" hidden></p>
 
     <footer class="footer">
       <span id="today"></span>
     </footer>
   </div>
+
+  <!-- Edit mode -->
+  <button class="edit-toggle" id="edit-toggle" type="button" aria-label="Rediger siden" title="Rediger">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"></path><path d="m13.5 6.5 4 4"></path></svg>
+  </button>
+
+  <div class="edit-bar" id="edit-bar" hidden>
+    <span class="edit-bar-label">Redigerer</span>
+    <button type="button" class="btn" id="add-category">+ Ny kategori</button>
+    <button type="button" class="btn" id="edit-heading">Endre overskrift</button>
+    <button type="button" class="btn btn-primary" id="edit-done">Ferdig</button>
+  </div>
+
+  <dialog class="dialog" id="dialog">
+    <form id="dialog-form" method="dialog" novalidate>
+      <h2 id="dialog-title"></h2>
+      <div class="fields" id="dialog-fields"></div>
+      <p class="form-error" id="dialog-error" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-danger" id="dialog-delete" hidden>Slett</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="dialog-cancel">Avbryt</button>
+        <button type="submit" class="btn btn-primary" id="dialog-save">Lagre</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
   <script src="app.js"></script>
 </body>
 </html>

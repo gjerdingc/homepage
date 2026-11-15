@@ -15,11 +15,11 @@ services:
       - proxy
     environment:
       TZ: Europe/Oslo
-    # Optional: keep the app list on the server instead of in the repo,
-    # so you can edit it without redeploying.
-    # volumes:
-    #   - /opt/homepage/apps.json:/usr/share/nginx/html/apps.json:ro
-    #   - /opt/homepage/icons:/usr/share/nginx/html/icons:ro
+      # Optional PIN code for editing the page. Leave empty for no PIN.
+      EDIT_PIN: ${EDIT_PIN:-}
+    volumes:
+      # The app list edited on the page is saved here and survives redeploys.
+      - /opt/homepage:/data
 
 networks:
   proxy:

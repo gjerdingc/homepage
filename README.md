@@ -1,70 +1,59 @@
 # Hjemme hos oss
 
 En liten, koselig startside for appene vi hoster hjemme (Immich, matplan, økonomi,
-brettspill osv.). Ren HTML/CSS/JS servert av nginx, uten byggesteg.
+brettspill osv.).
 
-## Legge til eller endre apper
+## Redigere apper og kategorier
 
-Alt står i [`site/apps.json`](site/apps.json):
+Nede i høyre hjørne er det en nesten gjennomsiktig blyant. Trykk på den for å gå i
+redigeringsmodus:
 
-```json
-{
-  "title": "Hjemme hos oss",
-  "subtitle": "Alt vi har på serveren hjemme, samlet på ett sted.",
-  "openInNewTab": false,
-  "categories": [
-    {
-      "name": "Minner",
-      "apps": [
-        { "name": "Immich", "description": "Bilder og videoer", "url": "https://immich.example.lan" }
-      ]
-    }
-  ]
-}
-```
+- **Trykk på et kort** for å endre navn, adresse, beskrivelse, kategori eller ikon,
+  eller for å slette appen.
+- **‹ ›** på kortene flytter appen. **↑ ↓** ved kategorinavnet flytter kategorien,
+  og **✎** gir den nytt navn eller sletter den.
+- **+ Legg til app** finnes nederst i hver kategori. **+ Ny kategori** og
+  **Endre overskrift** ligger i linjen nederst.
+- **Ferdig** (eller Esc) går tilbake til vanlig visning.
 
-Bytt ut `example.lan`-adressene med de ekte adressene deres.
+Hver endring lagres med en gang på serveren, så hele familien ser den.
 
-| Felt | Betydning |
-| --- | --- |
-| `name` | Navnet på kortet (påkrevd) |
-| `url` | Adressen appen åpnes på (påkrevd) |
-| `description` | Kort tekst under navnet |
-| `icon` | Valgfritt eget ikon, f.eks. `icons/immich.png` eller en full URL |
-| `keywords` | Valgfrie ekstra søkeord, f.eks. `["bilder", "foto"]` |
+Er `EDIT_PIN` satt, må man skrive PIN-koden før man kan redigere. Nettleseren husker
+den til fanen lukkes.
 
 ### Ikoner
 
-Uten `icon` henter siden ikonet appen selv viser i nettleserfanen, direkte fra appens
-egen adresse. Den prøver `/apple-touch-icon.png`, `/favicon.svg`, `/favicon.png` og
-`/favicon.ico` i den rekkefølgen, og viser en farget forbokstav hvis ingen finnes.
+Uten eget ikon henter siden ikonet appen selv viser i nettleserfanen, direkte fra
+appens egen adresse. Den prøver `/apple-touch-icon.png`, `/favicon.svg`, `/favicon.png`
+og `/favicon.ico` i den rekkefølgen, og viser en farget forbokstav hvis ingen finnes.
+Blir et ikon feil eller uskarpt, kan du lime inn adressen til et annet bilde i feltet
+«Eget ikon».
 
-Hvis en app har ikonet sitt et annet sted (eller ikonet blir uskarpt), legg en bildefil i
-`site/icons/` og pek på den med `"icon": "icons/navn.png"`.
+## Hvordan det henger sammen
 
-## Bruk
+- `site/`: selve siden (HTML, CSS, JS).
+- `server.py`: en liten Python-server (kun standardbiblioteket). Den serverer siden,
+  leser app-listen fra `/data/apps.json` og lagrer endringer dit.
+- `default-apps.json`: startlisten som kopieres til `/data/apps.json` første gang.
+  Senere endringer gjøres på siden, ikke i denne filen.
 
-- Skriv for å søke, og trykk **Enter** for å åpne første treff.
-- Trykk **/** hvor som helst for å hoppe til søkefeltet, **Esc** for å tømme.
-- Lyst og mørkt tema følger enheten.
-
-## Kjøre lokalt
+Kjøre lokalt:
 
 ```bash
-cd site && python3 -m http.server 8000
+DATA_DIR=./data PORT=8000 python3 server.py
 ```
 
 ## Deployment
 
 Portainer stack from this repository, compose path `docker-compose.yml`.
-No stack environment variables are needed.
+Optional stack environment variable: `EDIT_PIN` (PIN code required to edit the page;
+leave unset for no PIN).
 
 The container `homepage` has no host port. It joins the external Docker network `proxy`
 and serves plain HTTP on port 8080. Point Traefik at `http://homepage:8080`; Traefik
 terminates HTTPS.
 
-To update, use **Pull and redeploy** on the stack.
+The app list is stored in `/opt/homepage/apps.json` on the host, so edits survive
+redeploys. Back up that file if you want to keep the list.
 
-Vil dere endre app-listen uten å redeploye, kan dere fjerne kommentaren foran
-`volumes:` i `docker-compose.yml` og legge `apps.json` (og eventuelt `icons/`) i
-`/opt/homepage/` på serveren.
+To update, use **Pull and redeploy** on the stack.
