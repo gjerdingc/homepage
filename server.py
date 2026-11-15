@@ -79,10 +79,13 @@ def clean_config(data):
             desc = _text(app.get("description"), "Beskrivelse", 200)
             if desc:
                 item["description"] = desc
-            icon = _text(app.get("icon"), "Ikon", 2000)
+            icon = _text(app.get("icon"), "Ikon", 20000)
             if icon:
-                if not (icon.lower().startswith(("http://", "https://")) or icon.startswith("icons/")):
-                    raise InvalidConfig("Ikon må være en http(s)-adresse eller icons/filnavn")
+                low = icon.lower()
+                is_link = low.startswith(("http://", "https://", "data:image/")) or icon.startswith("icons/")
+                is_emoji = len(icon) <= 8 and not any(c in icon for c in "<>:/\\\"'")
+                if not (is_link or is_emoji):
+                    raise InvalidConfig("Ikon må være en emoji, en bildeadresse eller en data:image-adresse")
                 item["icon"] = icon
             apps.append(item)
         out["categories"].append(
@@ -167,7 +170,10 @@ def find_icon(page_url):
         if parser.found:
             best = max(parser.found, key=lambda f: _icon_score(*f))
             icon = urllib.parse.urljoin(final_url, best[3].strip())
-    except Exception:
+        else:
+            print(f"Icon lookup: no <link rel=icon> on {final_url}", flush=True)
+    except Exception as e:
+        print(f"Icon lookup: could not read {page_url}: {e}", flush=True)
         icon = None
     _icon_cache[page_url] = (time.time() + (ICON_CACHE_SECONDS if icon else 300), icon)
     return icon

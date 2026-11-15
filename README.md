@@ -28,8 +28,12 @@ appens egen adresse. Den prøver `/apple-touch-icon.png`, `/favicon.svg`, `/favi
 og `/favicon.ico` i den rekkefølgen. Finner den ingen av dem, leser serveren appens
 forside og bruker ikonet den oppgir i `<link rel="icon">`. Fungerer ikke det heller,
 vises en farget forbokstav.
-Blir et ikon feil eller uskarpt, kan du lime inn adressen til et annet bilde i feltet
-«Eget ikon».
+Blir et ikon feil eller uskarpt, kan du skrive en emoji (f.eks. 🍲) eller lime inn
+adressen til et bilde i feltet «Eget ikon».
+
+Viser en app bare forbokstaven, står grunnen i containerloggen i Portainer, på en linje
+som starter med `Icon lookup:`. Står det `could not read`, kommer containeren ikke til
+appens adresse.
 
 ## Hvordan det henger sammen
 

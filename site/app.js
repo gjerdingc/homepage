@@ -38,6 +38,9 @@
     return "God natt!";
   }
 
+  // A short icon value without ":" or "/" is an emoji, e.g. "🍲".
+  const isEmoji = (v) => !!v && v.length <= 8 && !/[:/<>\\"']/.test(v);
+
   function iconCandidates(app) {
     if (app.icon) return [app.icon];
     try {
@@ -63,6 +66,11 @@
       tile.classList.add("letter");
       tile.style.background = letterColor(app.name);
     };
+    if (isEmoji(app.icon)) {
+      tile.textContent = app.icon;
+      tile.classList.add("emoji");
+      return tile;
+    }
     const candidates = iconCandidates(app);
     if (!candidates.length) {
       showLetter();
@@ -333,8 +341,8 @@
         { id: "description", label: "Beskrivelse", value: app.description, placeholder: "Bilder og videoer fra familien" },
         { id: "category", label: "Kategori", type: "select", value: ci, options: config.categories.map((c) => c.name) },
         {
-          id: "icon", label: "Eget ikon (valgfritt)", value: app.icon, placeholder: "https://…/logo.png",
-          help: "La stå tomt for å bruke ikonet fra nettleserfanen til appen.",
+          id: "icon", label: "Eget ikon (valgfritt)", value: app.icon, placeholder: "🍲 eller https://…/logo.png",
+          help: "En emoji eller en bildeadresse. La stå tomt for å bruke ikonet fra nettleserfanen til appen.",
         },
       ],
       validate: (v) => (!v.name ? "Appen trenger et navn." : urlProblem(v.url)),
