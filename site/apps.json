@@ -1,0 +1,42 @@
+{
+  "title": "Hjemme hos oss",
+  "subtitle": "Alt vi har på serveren hjemme, samlet på ett sted.",
+  "openInNewTab": false,
+  "categories": [
+    {
+      "name": "Minner",
+      "apps": [
+        {
+          "name": "Immich",
+          "description": "Bilder og videoer fra familien",
+          "url": "https://immich.example.lan"
+        }
+      ]
+    },
+    {
+      "name": "Hverdagen",
+      "apps": [
+        {
+          "name": "Matplan",
+          "description": "Ukemeny, oppskrifter og handleliste",
+          "url": "https://mealprep.example.lan"
+        },
+        {
+          "name": "Økonomi",
+          "description": "Budsjett og oversikt over utgifter",
+          "url": "https://finances.example.lan"
+        }
+      ]
+    },
+    {
+      "name": "Moro",
+      "apps": [
+        {
+          "name": "Brettspill",
+          "description": "Samlingen vår og hvem som vant sist",
+          "url": "https://boardgame.example.lan"
+        }
+      ]
+    }
+  ]
+}

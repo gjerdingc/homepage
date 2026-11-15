@@ -1,0 +1,26 @@
+# Portainer stack: Repository, compose path docker-compose.yml.
+services:
+  homepage:
+    build: .
+    image: homepage:latest
+    # Rebuild on every deploy, so "Pull and redeploy" picks up changes from GitHub
+    pull_policy: build
+    container_name: homepage
+    restart: unless-stopped
+    # No host port: plain HTTP on port 8080, only on the "proxy" network. Traefik there
+    # terminates HTTPS and forwards to http://homepage:8080 (configured in Traefik).
+    expose:
+      - "8080"
+    networks:
+      - proxy
+    environment:
+      TZ: Europe/Oslo
+    # Optional: keep the app list on the server instead of in the repo,
+    # so you can edit it without redeploying.
+    # volumes:
+    #   - /opt/homepage/apps.json:/usr/share/nginx/html/apps.json:ro
+    #   - /opt/homepage/icons:/usr/share/nginx/html/icons:ro
+
+networks:
+  proxy:
+    external: true
