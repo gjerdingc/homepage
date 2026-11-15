@@ -3,7 +3,7 @@
 
   // Paths tried in order on each app's own address when no "icon" is set.
   // These are the usual places a site keeps the icon shown in the browser tab.
-  const ICON_PATHS = ["/apple-touch-icon.png", "/favicon.svg", "/favicon.png", "/favicon.ico"];
+  const ICON_PATHS = ["/favicon.svg", "/apple-touch-icon.png", "/favicon.png", "/favicon.ico"];
   const LETTER_COLORS = ["#e07a8b", "#7fb58f", "#e9a65a", "#7a9be0", "#b28be0", "#5fb3b3"];
   const PIN_KEY = "homepage-edit-pin";
 

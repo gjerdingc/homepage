@@ -24,7 +24,7 @@ den til fanen lukkes.
 ### Ikoner
 
 Uten eget ikon henter siden ikonet appen selv viser i nettleserfanen, direkte fra
-appens egen adresse. Den prøver `/apple-touch-icon.png`, `/favicon.svg`, `/favicon.png`
+appens egen adresse. Den prøver `/favicon.svg`, `/apple-touch-icon.png`, `/favicon.png`
 og `/favicon.ico` i den rekkefølgen. Finner den ingen av dem, leser serveren appens
 forside og bruker ikonet den oppgir i `<link rel="icon">`. Fungerer ikke det heller,
 vises en farget forbokstav.
