@@ -4,10 +4,16 @@ Serves the static files in ./site, serves the app list from DATA_DIR/apps.json,
 and saves edits made on the page (PUT /api/apps). Standard library only.
 """
 
+import base64
 import json
 import os
 import shutil
+import ssl
 import tempfile
+import time
+import urllib.parse
+import urllib.request
+from html.parser import HTMLParser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -99,6 +105,82 @@ def write_atomic(data):
     os.replace(tmp, APPS_FILE)
 
 
+class _IconLinks(HTMLParser):
+    """Collect <link rel="...icon..."> tags from a page's HTML."""
+
+    def __init__(self):
+        super().__init__()
+        self.found = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "link":
+            return
+        a = {k.lower(): (v or "") for k, v in attrs}
+        rels = a.get("rel", "").lower().split()
+        if "icon" in rels or "apple-touch-icon" in rels:
+            if a.get("href"):
+                self.found.append((rels, a.get("sizes", ""), a.get("type", ""), a["href"]))
+
+
+def _icon_score(rels, sizes, mime, href):
+    if "apple-touch-icon" in rels:
+        return 3000
+    if "svg" in mime or href.lower().split("?")[0].endswith(".svg"):
+        return 2000
+    best = 0
+    for part in sizes.lower().split():
+        w = part.split("x")[0]
+        if w.isdigit():
+            best = max(best, int(w))
+    return 1000 + best
+
+
+def _fetch(url, limit):
+    req = urllib.request.Request(url, headers={"User-Agent": "homepage-icon-finder"})
+    try:
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.geturl(), r.read(limit)
+    except urllib.error.URLError as e:
+        # Home servers often use self-signed certificates. We only read the
+        # page to find where its icon is, so retry without verification.
+        if not isinstance(getattr(e, "reason", None), ssl.SSLError):
+            raise
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=5, context=ctx) as r:
+            return r.geturl(), r.read(limit)
+
+
+_icon_cache = {}
+ICON_CACHE_SECONDS = 6 * 3600
+
+
+def find_icon(page_url):
+    """Return the absolute URL of the icon a page declares, or None."""
+    hit = _icon_cache.get(page_url)
+    if hit and hit[0] > time.time():
+        return hit[1]
+    icon = None
+    try:
+        final_url, body = _fetch(page_url, 512 * 1024)
+        parser = _IconLinks()
+        parser.feed(body.decode("utf-8", "replace"))
+        if parser.found:
+            best = max(parser.found, key=lambda f: _icon_score(*f))
+            icon = urllib.parse.urljoin(final_url, best[3].strip())
+    except Exception:
+        icon = None
+    _icon_cache[page_url] = (time.time() + (ICON_CACHE_SECONDS if icon else 300), icon)
+    return icon
+
+
+def known_app_urls():
+    try:
+        data = json.loads(APPS_FILE.read_text(encoding="utf-8"))
+        return {a.get("url") for c in data.get("categories", []) for a in c.get("apps", [])}
+    except (OSError, ValueError, AttributeError):
+        return set()
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(SITE_DIR), **kwargs)
@@ -129,12 +211,47 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        elif path == "/api/icon":
+            self._icon()
         elif path == "/api/settings":
             self._json(200, {"pinRequired": bool(EDIT_PIN)})
         elif path.endswith("/") and path != "/":
             self.send_error(404)
         else:
             super().do_GET()
+
+    def _icon(self):
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+        page_url = (query.get("url") or [""])[0]
+        # Only look up apps that are on the page, so this can't fetch arbitrary URLs.
+        if not page_url or page_url not in known_app_urls():
+            return self.send_error(404)
+        icon = find_icon(page_url)
+        if not icon:
+            return self.send_error(404)
+        if icon.startswith("data:"):
+            header, _, payload = icon.partition(",")
+            mime = header[5:].split(";")[0] or "image/png"
+            if not mime.startswith("image/"):
+                return self.send_error(404)
+            try:
+                raw = base64.b64decode(payload) if ";base64" in header else urllib.parse.unquote_to_bytes(payload)
+            except ValueError:
+                return self.send_error(404)
+            self.send_response(200)
+            self.send_header("Content-Type", mime)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "max-age=3600")
+            self.end_headers()
+            self.wfile.write(raw)
+            return
+        if not icon.lower().startswith(("http://", "https://")):
+            return self.send_error(404)
+        self.send_response(302)
+        self.send_header("Location", icon)
+        self.send_header("Cache-Control", "max-age=3600")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self):
         if self.path.split("?", 1)[0] != "/api/unlock":

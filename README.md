@@ -25,7 +25,9 @@ den til fanen lukkes.
 
 Uten eget ikon henter siden ikonet appen selv viser i nettleserfanen, direkte fra
 appens egen adresse. Den prøver `/apple-touch-icon.png`, `/favicon.svg`, `/favicon.png`
-og `/favicon.ico` i den rekkefølgen, og viser en farget forbokstav hvis ingen finnes.
+og `/favicon.ico` i den rekkefølgen. Finner den ingen av dem, leser serveren appens
+forside og bruker ikonet den oppgir i `<link rel="icon">`. Fungerer ikke det heller,
+vises en farget forbokstav.
 Blir et ikon feil eller uskarpt, kan du lime inn adressen til et annet bilde i feltet
 «Eget ikon».
 

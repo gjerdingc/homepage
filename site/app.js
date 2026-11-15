@@ -42,7 +42,8 @@
     if (app.icon) return [app.icon];
     try {
       const origin = new URL(app.url).origin;
-      return ICON_PATHS.map((p) => origin + p);
+      // Last try: ask our server to read the icon the app's page declares.
+      return [...ICON_PATHS.map((p) => origin + p), `api/icon?url=${encodeURIComponent(app.url)}`];
     } catch {
       return [];
     }
